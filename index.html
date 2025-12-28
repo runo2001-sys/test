@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>キャラアニメ（スマホ対応）</title>
+  <style>
+    canvas {
+      background: #eef;
+      border: 1px solid #333;
+      display: block;
+      margin: 0 auto;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+      gap: 20px;
+    }
+    .btn {
+      width: 80px;
+      height: 80px;
+      background: #ccc;
+      border-radius: 10px;
+      font-size: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      touch-action: none;
+    }
+    .btn:active {
+      background: #aaa;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="game" width="800" height="400"></canvas>
+
+  <div class="controls">
+    <div class="btn" id="left">←</div>
+    <div class="btn" id="right">→</div>
+  </div>
+
+  <!-- ここに main.js の内容を直接書く -->
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    let x = 300;
+    let y = 100;
+    const speed = 3;
+
+    const frameWidth = 200;
+    const frameHeight = 200;
+    const frameCount = 4;
+    let frameIndex = 0;
+    let frameTimer = 0;
+    const frameInterval = 10;
+
+    let direction = "right";
+
+    const keys = { left: false, right: false };
+
+    const img = new Image();
+    img.src = "character.png";
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") keys.left = true;
+      if (e.key === "ArrowRight") keys.right = true;
+    });
+
+    document.addEventListener("keyup", e => {
+      if (e.key === "ArrowLeft") keys.left = false;
+      if (e.key === "ArrowRight") keys.right = false;
+    });
+
+    const leftBtn = document.getElementById("left");
+    const rightBtn = document.getElementById("right");
+
+    leftBtn.addEventListener("touchstart", () => keys.left = true);
+    leftBtn.addEventListener("touchend", () => keys.left = false);
+
+    rightBtn.addEventListener("touchstart", () => keys.right = true);
+    rightBtn.addEventListener("touchend", () => keys.right = false);
+
+    function update() {
+      let moving = false;
+
+      if (keys.right) {
+        x += speed;
+        direction = "right";
+        moving = true;
+      }
+      if (keys.left) {
+        x -= speed;
+        direction = "left";
+        moving = true;
+      }
+
+      if (moving) {
+        frameTimer++;
+        if (frameTimer > frameInterval) {
+          frameTimer = 0;
+          frameIndex = (frameIndex + 1) % frameCount;
+        }
+      } else {
+        frameIndex = 0;
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const sx = frameIndex * frameWidth;
+
+      if (direction === "right") {
+        ctx.drawImage(img, sx, 0, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
+      } else {
+        ctx.save();
+        ctx.translate(x + frameWidth, y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, sx, 0, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+        ctx.restore();
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    img.onload = () => loop();
+  </script>
+
+</body>
+</html>
