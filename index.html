@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>キャラアニメ（スマホ対応）</title>
+  <title>キャラアニメ（ジャンプ付き）</title>
   <style>
     canvas {
       background: #eef;
@@ -10,12 +10,14 @@
       display: block;
       margin: 0 auto;
     }
+
     .controls {
       display: flex;
       justify-content: center;
       margin-top: 10px;
       gap: 20px;
     }
+
     .btn {
       width: 80px;
       height: 80px;
@@ -28,6 +30,7 @@
       user-select: none;
       touch-action: none;
     }
+
     .btn:active {
       background: #aaa;
     }
@@ -40,17 +43,26 @@
   <div class="controls">
     <div class="btn" id="left">←</div>
     <div class="btn" id="right">→</div>
+    <div class="btn" id="jump">⤒</div>
   </div>
 
-  <!-- ここに main.js の内容を直接書く -->
   <script>
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
+    // キャラ位置と速度
     let x = 300;
     let y = 100;
+    let vy = 0;              // 縦の速度
     const speed = 3;
+    const gravity = 0.5;     // 重力
+    const jumpPower = -12;   // ジャンプの強さ
 
+    // 地面の高さ（キャラの描画位置の y）
+    const groundY = 300;
+    let isOnGround = false;
+
+    // スプライト設定
     const frameWidth = 200;
     const frameHeight = 200;
     const frameCount = 4;
@@ -60,79 +72,50 @@
 
     let direction = "right";
 
-    const keys = { left: false, right: false };
+    // 入力状態
+    const keys = {
+      left: false,
+      right: false,
+      jump: false
+    };
 
+    // 画像
     const img = new Image();
-    img.src = "character.png";
+    img.src = "character.png"; // 同じフォルダに置く
 
+    // PCキーボード操作
     document.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft") keys.left = true;
       if (e.key === "ArrowRight") keys.right = true;
+      if (e.key === " " || e.key === "ArrowUp") keys.jump = true;
     });
 
     document.addEventListener("keyup", e => {
       if (e.key === "ArrowLeft") keys.left = false;
       if (e.key === "ArrowRight") keys.right = false;
+      if (e.key === " " || e.key === "ArrowUp") keys.jump = false;
     });
 
+    // スマホ用ボタン
     const leftBtn = document.getElementById("left");
     const rightBtn = document.getElementById("right");
+    const jumpBtn = document.getElementById("jump");
 
-    leftBtn.addEventListener("touchstart", () => keys.left = true);
-    leftBtn.addEventListener("touchend", () => keys.left = false);
+    leftBtn.addEventListener("touchstart", e => {
+      e.preventDefault();
+      keys.left = true;
+    });
+    leftBtn.addEventListener("touchend", e => {
+      e.preventDefault();
+      keys.left = false;
+    });
 
-    rightBtn.addEventListener("touchstart", () => keys.right = true);
-    rightBtn.addEventListener("touchend", () => keys.right = false);
+    rightBtn.addEventListener("touchstart", e => {
+      e.preventDefault();
+      keys.right = true;
+    });
+    rightBtn.addEventListener("touchend", e => {
+      e.preventDefault();
+      keys.right = false;
+    });
 
-    function update() {
-      let moving = false;
-
-      if (keys.right) {
-        x += speed;
-        direction = "right";
-        moving = true;
-      }
-      if (keys.left) {
-        x -= speed;
-        direction = "left";
-        moving = true;
-      }
-
-      if (moving) {
-        frameTimer++;
-        if (frameTimer > frameInterval) {
-          frameTimer = 0;
-          frameIndex = (frameIndex + 1) % frameCount;
-        }
-      } else {
-        frameIndex = 0;
-      }
-    }
-
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const sx = frameIndex * frameWidth;
-
-      if (direction === "right") {
-        ctx.drawImage(img, sx, 0, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
-      } else {
-        ctx.save();
-        ctx.translate(x + frameWidth, y);
-        ctx.scale(-1, 1);
-        ctx.drawImage(img, sx, 0, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
-        ctx.restore();
-      }
-    }
-
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
-    }
-
-    img.onload = () => loop();
-  </script>
-
-</body>
-</html>
