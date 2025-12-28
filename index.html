@@ -119,3 +119,82 @@
       keys.right = false;
     });
 
+    jumpBtn.addEventListener("touchstart", e => {
+      e.preventDefault();
+      keys.jump = true;
+    });
+    jumpBtn.addEventListener("touchend", e => {
+      e.preventDefault();
+      keys.jump = false;
+    });
+
+    function update() {
+      let moving = false;
+
+      // 左右移動
+      if (keys.right) {
+        x += speed;
+        direction = "right";
+        moving = true;
+      }
+      if (keys.left) {
+        x -= speed;
+        direction = "left";
+        moving = true;
+      }
+
+      // ジャンプ（地面にいるときだけ）
+      if (keys.jump && isOnGround) {
+        vy = jumpPower;
+        isOnGround = false;
+      }
+
+      // 重力
+      vy += gravity;
+      y += vy;
+
+      // 地面判定
+      if (y >= groundY) {
+        y = groundY;
+        vy = 0;
+        isOnGround = true;
+      }
+
+      // 歩きアニメ（地面にいるときだけ）
+      if (moving && isOnGround) {
+        frameTimer++;
+        if (frameTimer > frameInterval) {
+          frameTimer = 0;
+          frameIndex = (frameIndex + 1) % frameCount;
+        }
+      } else {
+        frameIndex = 0;
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const sx = frameIndex * frameWidth;
+
+      if (direction === "right") {
+        ctx.drawImage(img, sx, 0, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
+      } else {
+        ctx.save();
+        ctx.translate(x + frameWidth, y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, sx, 0, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+        ctx.restore();
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    img.onload = () => loop();
+  </script>
+</body>
+</html>
